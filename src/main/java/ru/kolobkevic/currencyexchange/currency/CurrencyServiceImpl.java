@@ -36,7 +36,6 @@ public class CurrencyServiceImpl implements CurrencyService {
         currencyRepository.deleteById(id);
     }
 
-    @Override
     public void delete(Currency currency) {
         currencyRepository.deleteById(currency.getId());
     }

@@ -8,5 +8,4 @@ public interface CurrencyService {
     Iterable<Currency> findAll();
     Currency save(Currency currency);
     void deleteById(Integer id);
-    void delete(Currency currency);
 }
