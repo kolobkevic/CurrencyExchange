@@ -5,11 +5,19 @@ import ru.kolobkevic.currencyexchange.currency.dto.CurrencyRequestDto;
 import ru.kolobkevic.currencyexchange.currency.dto.CurrencyResponseDto;
 
 public class CurrencyMapper {
-    public static final JMapper<CurrencyResponseDto, Currency> responseMapper =
+    private static final JMapper<CurrencyResponseDto, Currency> responseMapper =
             new JMapper<>(CurrencyResponseDto.class, Currency.class);
-    public static final JMapper<Currency, CurrencyRequestDto> requestMapper =
+    private static final JMapper<Currency, CurrencyRequestDto> requestMapper =
             new JMapper<>(Currency.class, CurrencyRequestDto.class);
 
     private CurrencyMapper() {
+    }
+
+    public static CurrencyResponseDto toDto(Currency currency) {
+        return responseMapper.getDestination(currency);
+    }
+
+    public static Currency toModel(CurrencyRequestDto currency) {
+        return requestMapper.getDestination(currency);
     }
 }
