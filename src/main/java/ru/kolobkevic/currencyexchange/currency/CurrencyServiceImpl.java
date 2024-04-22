@@ -1,42 +1,49 @@
 package ru.kolobkevic.currencyexchange.currency;
 
-import lombok.RequiredArgsConstructor;
+import ru.kolobkevic.currencyexchange.currency.dto.CurrencyRequestDto;
+import ru.kolobkevic.currencyexchange.currency.dto.CurrencyResponseDto;
 
+import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 public class CurrencyServiceImpl implements CurrencyService {
     private final CurrencyRepository currencyRepository;
 
-    @Override
-    public Optional<Currency> findById(Integer id) {
-        return currencyRepository.findById(id);
+    public CurrencyServiceImpl(Connection connection) {
+        this.currencyRepository = new CurrencyRepository(connection);
     }
 
     @Override
-    public Optional<Currency> findByCode(String code) {
-        return currencyRepository.findByCode(code);
+    public Optional<CurrencyResponseDto> findById(Integer id) {
+        Optional<Currency> currency = currencyRepository.findById(id);
+        return currency.map(CurrencyMapper::toDto);
     }
 
     @Override
-    public List<Currency> findAll() {
+    public Optional<CurrencyResponseDto> findByCode(String code) {
+        Optional<Currency> currency = currencyRepository.findByCode(code);
+        return currency.map(CurrencyMapper::toDto);
+    }
+
+    @Override
+    public List<CurrencyResponseDto> findAll() {
         List<Currency> currencies = currencyRepository.findAll();
-        return currencies.isEmpty() ? Collections.emptyList() : currencies;
+        if (currencies.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return currencies.stream().map(CurrencyMapper::toDto).toList();
     }
 
     @Override
-    public Currency save(Currency currency) {
-        return null;
+    public CurrencyResponseDto save(CurrencyRequestDto currencyRequestDto) {
+        Currency currency = currencyRepository.save(CurrencyMapper.toModel(currencyRequestDto));
+        return CurrencyMapper.toDto(currency);
     }
 
     @Override
     public void deleteById(Integer id) {
         currencyRepository.deleteById(id);
-    }
-
-    public void delete(Currency currency) {
-        currencyRepository.deleteById(currency.getId());
     }
 }
