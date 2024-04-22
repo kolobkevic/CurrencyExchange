@@ -1,17 +1,19 @@
 package ru.kolobkevic.currencyexchange.currency;
 
-import lombok.RequiredArgsConstructor;
 import ru.kolobkevic.currencyexchange.currency.dto.CurrencyRequestDto;
 import ru.kolobkevic.currencyexchange.currency.dto.CurrencyResponseDto;
 
+import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
 public class CurrencyServiceImpl implements CurrencyService {
     private final CurrencyRepository currencyRepository;
+
+    public CurrencyServiceImpl(Connection connection) {
+        this.currencyRepository = new CurrencyRepository(connection);
+    }
 
     @Override
     public Optional<CurrencyResponseDto> findById(Integer id) {
@@ -31,7 +33,7 @@ public class CurrencyServiceImpl implements CurrencyService {
         if (currencies.isEmpty()) {
             return Collections.emptyList();
         }
-        return currencies.stream().map(CurrencyMapper::toDto).collect(Collectors.toList());
+        return currencies.stream().map(CurrencyMapper::toDto).toList();
     }
 
     @Override

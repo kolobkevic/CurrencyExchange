@@ -1,6 +1,5 @@
 package ru.kolobkevic.currencyexchange.currency;
 
-import lombok.RequiredArgsConstructor;
 import ru.kolobkevic.currencyexchange.common.repositories.CrudRepository;
 import ru.kolobkevic.currencyexchange.common.ResultSetMapper;
 
@@ -12,10 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@RequiredArgsConstructor
 public class CurrencyRepository implements CrudRepository<Currency> {
 
     private final Connection connection;
+
+    public CurrencyRepository(Connection connection) {
+        this.connection = connection;
+    }
 
     @Override
     public Optional<Currency> findById(Integer id) {
@@ -60,7 +62,7 @@ public class CurrencyRepository implements CrudRepository<Currency> {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return null;
+        return findByCode(currency.getCode()).get();
     }
 
 
