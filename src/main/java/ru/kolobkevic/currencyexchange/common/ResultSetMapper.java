@@ -6,7 +6,7 @@ import ru.kolobkevic.currencyexchange.exchangerate.ExchangeRate;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ResultSetMapper {
+public final class ResultSetMapper {
 
     private ResultSetMapper() {}
 
