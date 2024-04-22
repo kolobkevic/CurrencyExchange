@@ -7,7 +7,6 @@ import ru.kolobkevic.currencyexchange.exchangerate.dto.ExchangeRateResponseDto;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public class ExchangeRateServiceImpl implements ExchangeRateService {
@@ -25,7 +24,7 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
         if (exchangeRate.isEmpty()) {
             return Collections.emptyList();
         }
-        return exchangeRate.stream().map(ExchangeRateMapper::toDto).collect(Collectors.toList());
+        return exchangeRate.stream().map(ExchangeRateMapper::toDto).toList();
     }
 
     @Override
