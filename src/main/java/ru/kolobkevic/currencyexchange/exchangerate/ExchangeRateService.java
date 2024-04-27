@@ -11,7 +11,11 @@ public interface ExchangeRateService {
 
     List<ExchangeRateResponseDto> findAll();
 
+    Optional<ExchangeRateResponseDto> findByExchangeCodes(String baseCode, String targetCode);
+
     ExchangeRateResponseDto save(ExchangeRateRequestDto exchangeRate);
+
+    ExchangeRateResponseDto update(ExchangeRateRequestDto exchangeRate);
 
     void deleteById(Integer id);
 }

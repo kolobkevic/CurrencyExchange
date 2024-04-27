@@ -19,7 +19,7 @@ public class ExchangeRateRepository implements CrudRepository<ExchangeRate> {
 
     @Override
     public Optional<ExchangeRate> findById(Integer id) {
-        String query = "SELECT * FROM ExchangeRates WHERE id = ?";
+        String query = "SELECT id, basecurrencyid, targetcurrencyid, rate FROM ExchangeRates WHERE id = ?";
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.setInt(1, id);
             preparedStatement.execute();
@@ -35,7 +35,7 @@ public class ExchangeRateRepository implements CrudRepository<ExchangeRate> {
 
     @Override
     public List<ExchangeRate> findAll() {
-        String query = "SELECT * FROM ExchangeRates";
+        String query = "SELECT id, basecurrencyid, targetcurrencyid, rate FROM ExchangeRates";
         try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
             preparedStatement.execute();
             ResultSet resultSet = preparedStatement.getResultSet();
@@ -57,10 +57,11 @@ public class ExchangeRateRepository implements CrudRepository<ExchangeRate> {
             preparedStatement.setInt(2, exchangeRate.getTargetCurrencyId());
             preparedStatement.setBigDecimal(3, exchangeRate.getRate());
             preparedStatement.execute();
+            return findByCurrenciesCodes(exchangeRate.getBaseCurrencyId(),
+                    exchangeRate.getTargetCurrencyId()).orElseThrow(RuntimeException::new);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        return null;
     }
 
 
@@ -74,5 +75,56 @@ public class ExchangeRateRepository implements CrudRepository<ExchangeRate> {
             throw new RuntimeException(e);
         }
 
+    }
+
+    public Optional<ExchangeRate> findByExchangeCodes (String baseCode, String targetCode) {
+        String query = "SELECT rates.id, rates.basecurrencyid, rates.targetcurrencyid, rates.rate " +
+                "FROM ExchangeRates rates " +
+                "JOIN Currencies base ON rates.BaseCurrencyId = base.ID " +
+                "JOIN Currencies target ON rates.TargetCurrencyId = target.ID " +
+                "WHERE base.Code = ? AND target.Code = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setString(1, baseCode);
+            preparedStatement.setString(2, targetCode);
+            preparedStatement.execute();
+            ResultSet resultSet = preparedStatement.getResultSet();
+            if (resultSet.next()) {
+                return Optional.of(ResultSetMapper.toExchangeRate(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return Optional.empty();
+    }
+
+    public ExchangeRate update(ExchangeRate exchangeRate){
+        String query = "UPDATE ExchangeRates SET Rate =? WHERE BaseCurrencyId = ? AND TargetCurrencyId = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setBigDecimal(1, exchangeRate.getRate());
+            preparedStatement.setInt(2, exchangeRate.getBaseCurrencyId());
+            preparedStatement.setInt(3, exchangeRate.getTargetCurrencyId());
+            preparedStatement.execute();
+            return findByCurrenciesCodes(exchangeRate.getBaseCurrencyId(),
+                    exchangeRate.getTargetCurrencyId()).orElseThrow(RuntimeException::new);
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Optional<ExchangeRate> findByCurrenciesCodes(Integer baseCurrencyId, Integer targetCurrencyId) {
+        String query = "SELECT rates.id, rates.basecurrencyid, rates.targetcurrencyid, rates.rate " +
+                "FROM ExchangeRates rates WHERE BaseCurrencyId = ? AND TargetCurrencyId = ?";
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1, baseCurrencyId);
+            preparedStatement.setInt(2, targetCurrencyId);
+            preparedStatement.execute();
+            ResultSet resultSet = preparedStatement.getResultSet();
+            if (resultSet.next()) {
+                return Optional.of(ResultSetMapper.toExchangeRate(resultSet));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return Optional.empty();
     }
 }
