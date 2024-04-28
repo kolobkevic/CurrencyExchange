@@ -37,6 +37,15 @@
         <url-pattern>/exchangeRates</url-pattern>
     </servlet-mapping>
 
+    <servlet>
+        <servlet-name>CurrencyExchangeServlet</servlet-name>
+        <servlet-class>ru.kolobkevic.currencyexchange.currencyexchange.servlet.CurrencyExchangeServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CurrencyExchangeServlet</servlet-name>
+        <url-pattern>/exchange/*</url-pattern>
+    </servlet-mapping>
+
     <filter>
         <filter-name>EncodingFilter</filter-name>
         <filter-class>ru.kolobkevic.currencyexchange.common.EncodingFilter</filter-class>
