@@ -1,5 +1,6 @@
 package ru.kolobkevic.currencyexchange.common;
 
+import ru.kolobkevic.currencyexchange.common.exceptions.MapperException;
 import ru.kolobkevic.currencyexchange.currency.Currency;
 import ru.kolobkevic.currencyexchange.exchangerate.ExchangeRate;
 
@@ -8,7 +9,8 @@ import java.sql.SQLException;
 
 public final class ResultSetMapper {
 
-    private ResultSetMapper() {}
+    private ResultSetMapper() {
+    }
 
     public static Currency toCurrency(ResultSet resultSet) {
         try {
@@ -18,9 +20,8 @@ public final class ResultSetMapper {
                     resultSet.getString("fullName"),
                     resultSet.getString("sign")
             );
-        }
-        catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new MapperException("Unable to map resultSet to Currency", e);
         }
     }
 
@@ -32,9 +33,8 @@ public final class ResultSetMapper {
                     resultSet.getInt("targetCurrencyId"),
                     resultSet.getBigDecimal("rate")
             );
-        }
-        catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException e) {
+            throw new MapperException("Unable to map resultSet to ExchangeRate", e);
         }
     }
 }
