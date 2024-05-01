@@ -69,7 +69,7 @@ public class ExchangeRateServlet extends AbstractServlet {
         }
     }
 
-    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+    protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         List<String> codes = PathUtils.getListOfCurrenciesFromRequest(req);
         String baseCode = codes.get(0);
         String targetCode = codes.get(1);
