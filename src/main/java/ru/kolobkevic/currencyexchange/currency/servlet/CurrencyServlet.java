@@ -17,6 +17,7 @@ import java.io.IOException;
 
 import static ru.kolobkevic.currencyexchange.common.Constants.DEFAULT_ERROR_MESSAGE;
 import static ru.kolobkevic.currencyexchange.common.Constants.ILLEGAL_ARGUMENT_MESSAGE;
+import static ru.kolobkevic.currencyexchange.common.Constants.CURRENCY_NOT_FOUND_MESSAGE;
 
 @WebServlet(name = "CurrencyServlet", value = "/currency/*")
 public class CurrencyServlet extends AbstractServlet {
@@ -34,7 +35,7 @@ public class CurrencyServlet extends AbstractServlet {
         try {
             sendJsonResponse(resp, HttpServletResponse.SC_OK, currencyService.findByCode(currencyCode));
         } catch (ObjectNotFoundException e) {
-            sendJsonResponse(resp, HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+            resp.sendError(HttpServletResponse.SC_NOT_FOUND, CURRENCY_NOT_FOUND_MESSAGE);
         } catch (IllegalArgumentException e) {
             resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ILLEGAL_ARGUMENT_MESSAGE);
         } catch (DatabaseException e) {
