@@ -17,7 +17,7 @@ public final class ResultSetMapper {
             return new Currency(
                     resultSet.getInt("id"),
                     resultSet.getString("code"),
-                    resultSet.getString("fullName"),
+                    resultSet.getString("full_name"),
                     resultSet.getString("sign")
             );
         } catch (SQLException e) {
@@ -28,10 +28,12 @@ public final class ResultSetMapper {
     public static ExchangeRate toExchangeRate(ResultSet resultSet) {
         try {
             return new ExchangeRate(
-                    resultSet.getInt("id"),
-                    resultSet.getInt("baseCurrencyId"),
-                    resultSet.getInt("targetCurrencyId"),
-                    resultSet.getBigDecimal("rate")
+                    resultSet.getInt("er_id"),
+                    new Currency(resultSet.getInt("b_id"), resultSet.getString("b_code"),
+                            resultSet.getString("b_full_name"), resultSet.getString("b_sign")),
+                    new Currency(resultSet.getInt("t_id"), resultSet.getString("t_code"),
+                            resultSet.getString("t_full_name"), resultSet.getString("t_sign")),
+                    resultSet.getBigDecimal("er_rate")
             );
         } catch (SQLException e) {
             throw new MapperException("Unable to map resultSet to ExchangeRate", e);
