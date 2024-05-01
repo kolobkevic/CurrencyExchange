@@ -1,4 +1,4 @@
-package ru.kolobkevic.currencyexchange.common;
+package ru.kolobkevic.currencyexchange.common.db;
 
 import java.sql.Connection;
 

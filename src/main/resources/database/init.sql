@@ -1,22 +1,23 @@
-CREATE TABLE IF NOT EXISTS Currencies
+CREATE TABLE IF NOT EXISTS currency
 (
-    ID       INTEGER PRIMARY KEY AUTOINCREMENT,
-    Code     VARCHAR UNIQUE NOT NULL,
-    FullName VARCHAR        NOT NULL,
-    Sign     VARCHAR
+    id       INTEGER PRIMARY KEY AUTOINCREMENT,
+    code     VARCHAR UNIQUE NOT NULL,
+    full_name VARCHAR        NOT NULL,
+    sign     VARCHAR
 );
 
-CREATE TABLE IF NOT EXISTS ExchangeRates
+CREATE TABLE IF NOT EXISTS exchange_rate
 (
-    ID               INTEGER PRIMARY KEY AUTOINCREMENT,
-    BaseCurrencyId   INTEGER NOT NULL,
-    TargetCurrencyId INTEGER NOT NULL,
-    Rate             DECIMAL(6),
-    CONSTRAINT fk_base_curr FOREIGN KEY (BaseCurrencyId) REFERENCES Currencies (ID) ON DELETE CASCADE,
-    CONSTRAINT fk_target_curr FOREIGN KEY (TargetCurrencyId) REFERENCES Currencies (ID) ON DELETE CASCADE
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    base_currency_id   INTEGER NOT NULL,
+    target_currency_id INTEGER NOT NULL,
+    rate             DECIMAL(6),
+    CONSTRAINT fk_base_currency_id FOREIGN KEY (base_currency_id) REFERENCES currency (id) ON DELETE CASCADE,
+    CONSTRAINT fk_target_currency_id FOREIGN KEY (target_currency_id) REFERENCES currency (id) ON DELETE CASCADE,
+    CONSTRAINT fk_base_target_id UNIQUE (base_currency_id, target_currency_id)
 );
 
-INSERT INTO Currencies (Code, FullName, Sign)
+INSERT INTO currency (code, full_name, sign)
 VALUES ('AZN', 'Азербайджанский манат', '₼'),
        ('BYN', 'Белорусский рубль', 'Р'),
        ('RUB', 'Российский рубль', 'Р'),
@@ -28,7 +29,7 @@ VALUES ('AZN', 'Азербайджанский манат', '₼'),
        ('TRY', 'Турецкая лира', '₺'),
        ('GBP', 'Фунт стерлингов Соединенного королевства', '£');
 
-INSERT INTO ExchangeRates (BaseCurrencyId, TargetCurrencyId, Rate)
+INSERT INTO exchange_rate (base_currency_id, target_currency_id, rate)
 VALUES (1, 3, 54.8775),
        (2, 3, 28.6672),
        (4, 3, 34.9028),

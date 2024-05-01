@@ -1,7 +1,6 @@
 package ru.kolobkevic.currencyexchange.currencyexchange;
 
-import ru.kolobkevic.currencyexchange.currency.CurrencyService;
-import ru.kolobkevic.currencyexchange.currency.CurrencyServiceImpl;
+import ru.kolobkevic.currencyexchange.common.exceptions.ObjectNotFoundException;
 import ru.kolobkevic.currencyexchange.currencyexchange.dto.ExchangeRequestDto;
 import ru.kolobkevic.currencyexchange.currencyexchange.dto.ExchangeResponseDto;
 import ru.kolobkevic.currencyexchange.exchangerate.ExchangeRateService;
@@ -11,70 +10,67 @@ import ru.kolobkevic.currencyexchange.exchangerate.dto.ExchangeRateResponseDto;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.Connection;
-import java.util.Optional;
 
 public class CurrencyExchangeServiceImpl implements CurrencyExchangeService {
     private final ExchangeRateService exchangeRateService;
-    private final CurrencyService currencyService;
     private static final String CROSS_CURRENCY = "USD";
 
-    public CurrencyExchangeServiceImpl(Connection connection){
+    public CurrencyExchangeServiceImpl(Connection connection) {
         exchangeRateService = new ExchangeRateServiceImpl(connection);
-        currencyService = new CurrencyServiceImpl(connection);
     }
 
     @Override
     public ExchangeResponseDto getExchange(ExchangeRequestDto requestDto) {
-        Optional<ExchangeRateResponseDto> directExchangeRate =
+        try {
+            return getDirectExchange(requestDto);
+        } catch (ObjectNotFoundException e) {
+            try {
+                return getReverseExchange(requestDto);
+            } catch (ObjectNotFoundException e1) {
+                try {
+                    return getCrossExchange(requestDto);
+                } catch (ObjectNotFoundException e2) {
+                    throw new ObjectNotFoundException("Currency not found", e2);
+                }
+            }
+        }
+    }
+
+    private ExchangeResponseDto getDirectExchange(ExchangeRequestDto requestDto) {
+        ExchangeRateResponseDto directExchangeRate =
                 exchangeRateService.findByExchangeCodes(requestDto.getBaseCurrency(), requestDto.getTargetCurrency());
-        if (directExchangeRate.isPresent()) {
-            return getDirectExchange(directExchangeRate.get(), requestDto.getAmount());
-        }
+        ExchangeResponseDto exchangeResponseDto = new ExchangeResponseDto();
+        exchangeResponseDto.setBaseCurrency(directExchangeRate.getBaseCurrency());
+        exchangeResponseDto.setTargetCurrency(directExchangeRate.getTargetCurrency());
+        exchangeResponseDto.setRate(directExchangeRate.getRate());
+        exchangeResponseDto.setAmount(requestDto.getAmount());
+        exchangeResponseDto.setConvertedAmount(convertAmount(requestDto.getAmount(), directExchangeRate.getRate()));
+        return exchangeResponseDto;
+    }
 
-        Optional<ExchangeRateResponseDto> reverseExchangeRate =
+    private ExchangeResponseDto getReverseExchange(ExchangeRequestDto requestDto) {
+        ExchangeRateResponseDto reverseExchangeRate =
                 exchangeRateService.findByExchangeCodes(requestDto.getTargetCurrency(), requestDto.getBaseCurrency());
-        if (reverseExchangeRate.isPresent()) {
-            return getReverseExchange(reverseExchangeRate.get(), requestDto.getAmount());
-        }
+        ExchangeResponseDto exchangeResponseDto = new ExchangeResponseDto();
+        exchangeResponseDto.setBaseCurrency(reverseExchangeRate.getTargetCurrency());
+        exchangeResponseDto.setTargetCurrency(reverseExchangeRate.getBaseCurrency());
+        exchangeResponseDto.setRate(getReverseRate(reverseExchangeRate.getRate()));
+        exchangeResponseDto.setAmount(requestDto.getAmount());
+        exchangeResponseDto.setConvertedAmount(convertAmount(requestDto.getAmount(), exchangeResponseDto.getRate()));
+        return exchangeResponseDto;
+    }
 
-        Optional<ExchangeRateResponseDto> currencyFrom =
+    private ExchangeResponseDto getCrossExchange(ExchangeRequestDto requestDto) {
+        ExchangeRateResponseDto currencyFrom =
                 exchangeRateService.findByExchangeCodes(CROSS_CURRENCY, requestDto.getBaseCurrency());
-        Optional<ExchangeRateResponseDto> currencyTo =
+        ExchangeRateResponseDto currencyTo =
                 exchangeRateService.findByExchangeCodes(CROSS_CURRENCY, requestDto.getTargetCurrency());
-        if (currencyFrom.isPresent() && currencyTo.isPresent()) {
-            return getCrossExchange(currencyFrom.get(), currencyTo.get(), requestDto.getAmount());
-        }
-        throw new RuntimeException();
-    }
-
-    private ExchangeResponseDto getDirectExchange(ExchangeRateResponseDto responseDto, BigDecimal amount) {
         ExchangeResponseDto exchangeResponseDto = new ExchangeResponseDto();
-        exchangeResponseDto.setBaseCurrency(currencyService.findById(responseDto.getBaseCurrencyId()).get());
-        exchangeResponseDto.setTargetCurrency(currencyService.findById(responseDto.getTargetCurrencyId()).get());
-        exchangeResponseDto.setRate(responseDto.getRate());
-        exchangeResponseDto.setAmount(amount);
-        exchangeResponseDto.setConvertedAmount(convertAmount(amount, responseDto.getRate()));
-        return exchangeResponseDto;
-    }
-
-    private ExchangeResponseDto getReverseExchange(ExchangeRateResponseDto responseDto, BigDecimal amount) {
-        ExchangeResponseDto exchangeResponseDto = new ExchangeResponseDto();
-        exchangeResponseDto.setBaseCurrency(currencyService.findById(responseDto.getTargetCurrencyId()).get());
-        exchangeResponseDto.setTargetCurrency(currencyService.findById(responseDto.getBaseCurrencyId()).get());
-        exchangeResponseDto.setRate(getReverseRate(responseDto.getRate()));
-        exchangeResponseDto.setAmount(amount);
-        exchangeResponseDto.setConvertedAmount(convertAmount(amount, exchangeResponseDto.getRate()));
-        return exchangeResponseDto;
-    }
-
-    private ExchangeResponseDto getCrossExchange(ExchangeRateResponseDto base, ExchangeRateResponseDto target,
-                                                 BigDecimal amount) {
-        ExchangeResponseDto exchangeResponseDto = new ExchangeResponseDto();
-        exchangeResponseDto.setBaseCurrency(currencyService.findById(base.getTargetCurrencyId()).get());
-        exchangeResponseDto.setTargetCurrency(currencyService.findById(target.getTargetCurrencyId()).get());
-        exchangeResponseDto.setRate(getCrossRate(base.getRate(), target.getRate()));
-        exchangeResponseDto.setAmount(amount);
-        exchangeResponseDto.setConvertedAmount(convertAmount(amount, exchangeResponseDto.getRate()));
+        exchangeResponseDto.setBaseCurrency(currencyFrom.getTargetCurrency());
+        exchangeResponseDto.setTargetCurrency(currencyTo.getTargetCurrency());
+        exchangeResponseDto.setRate(getCrossRate(currencyFrom.getRate(), currencyTo.getRate()));
+        exchangeResponseDto.setAmount(requestDto.getAmount());
+        exchangeResponseDto.setConvertedAmount(convertAmount(requestDto.getAmount(), exchangeResponseDto.getRate()));
         return exchangeResponseDto;
     }
 

@@ -1,13 +1,13 @@
 package ru.kolobkevic.currencyexchange.exchangerate;
 
 import lombok.RequiredArgsConstructor;
+import ru.kolobkevic.currencyexchange.common.exceptions.ObjectNotFoundException;
 import ru.kolobkevic.currencyexchange.exchangerate.dto.ExchangeRateRequestDto;
 import ru.kolobkevic.currencyexchange.exchangerate.dto.ExchangeRateResponseDto;
 
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 @RequiredArgsConstructor
 public class ExchangeRateServiceImpl implements ExchangeRateService {
@@ -18,9 +18,10 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     }
 
     @Override
-    public Optional<ExchangeRateResponseDto> findById(Integer id) {
-        Optional<ExchangeRate> exchangeRate = exchangeRateRepository.findById(id);
-        return exchangeRate.map(ExchangeRateMapper::toDto);
+    public ExchangeRateResponseDto findById(Integer id) {
+        ExchangeRate exchangeRate = exchangeRateRepository.findById(id).orElseThrow(
+                () -> new ObjectNotFoundException("Exchange rate with id " + id + " not found"));
+        return ExchangeRateMapper.toDto(exchangeRate);
     }
 
     @Override
@@ -44,9 +45,11 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
     }
 
     @Override
-    public Optional<ExchangeRateResponseDto> findByExchangeCodes(String baseCode, String targetCode) {
-        Optional<ExchangeRate> exchangeRate = exchangeRateRepository.findByExchangeCodes(baseCode, targetCode);
-        return exchangeRate.map(ExchangeRateMapper::toDto);
+    public ExchangeRateResponseDto findByExchangeCodes(String baseCode, String targetCode) {
+        ExchangeRate exchangeRate = exchangeRateRepository.findByExchangeCodes(baseCode, targetCode).orElseThrow(
+                () -> new ObjectNotFoundException("Exchange rate with code " + baseCode + " not found")
+        );
+        return ExchangeRateMapper.toDto(exchangeRate);
     }
 
     @Override

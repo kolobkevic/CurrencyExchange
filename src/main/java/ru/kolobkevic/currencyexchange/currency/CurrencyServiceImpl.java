@@ -1,12 +1,12 @@
 package ru.kolobkevic.currencyexchange.currency;
 
+import ru.kolobkevic.currencyexchange.common.exceptions.ObjectNotFoundException;
 import ru.kolobkevic.currencyexchange.currency.dto.CurrencyRequestDto;
 import ru.kolobkevic.currencyexchange.currency.dto.CurrencyResponseDto;
 
 import java.sql.Connection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 public class CurrencyServiceImpl implements CurrencyService {
     private final CurrencyRepository currencyRepository;
@@ -16,15 +16,17 @@ public class CurrencyServiceImpl implements CurrencyService {
     }
 
     @Override
-    public Optional<CurrencyResponseDto> findById(Integer id) {
-        Optional<Currency> currency = currencyRepository.findById(id);
-        return currency.map(CurrencyMapper::toDto);
+    public CurrencyResponseDto findById(Integer id) {
+        Currency currency = currencyRepository.findById(id).orElseThrow(() ->
+                new ObjectNotFoundException("Currency not found"));
+        return CurrencyMapper.toDto(currency);
     }
 
     @Override
-    public Optional<CurrencyResponseDto> findByCode(String code) {
-        Optional<Currency> currency = currencyRepository.findByCode(code);
-        return currency.map(CurrencyMapper::toDto);
+    public CurrencyResponseDto findByCode(String code) {
+        Currency currency = currencyRepository.findByCode(code).orElseThrow(() ->
+                new ObjectNotFoundException("Currency not found"));
+        return CurrencyMapper.toDto(currency);
     }
 
     @Override
