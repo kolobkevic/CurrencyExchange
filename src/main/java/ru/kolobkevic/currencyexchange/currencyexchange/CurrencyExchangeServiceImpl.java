@@ -56,7 +56,7 @@ public class CurrencyExchangeServiceImpl implements CurrencyExchangeService {
         exchangeResponseDto.setTargetCurrency(reverseExchangeRate.getBaseCurrency());
         exchangeResponseDto.setRate(getReverseRate(reverseExchangeRate.getRate()));
         exchangeResponseDto.setAmount(requestDto.getAmount());
-        exchangeResponseDto.setConvertedAmount(convertAmount(requestDto.getAmount(), reverseExchangeRate.getRate()));
+        exchangeResponseDto.setConvertedAmount(convertAmount(requestDto.getAmount(), exchangeResponseDto.getRate()));
         return exchangeResponseDto;
     }
 
