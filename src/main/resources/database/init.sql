@@ -1,17 +1,17 @@
 CREATE TABLE IF NOT EXISTS currency
 (
-    id       INTEGER PRIMARY KEY AUTOINCREMENT,
-    code     VARCHAR UNIQUE NOT NULL,
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    code      VARCHAR UNIQUE NOT NULL,
     full_name VARCHAR        NOT NULL,
-    sign     VARCHAR
+    sign      VARCHAR
 );
 
 CREATE TABLE IF NOT EXISTS exchange_rate
 (
-    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    id                 INTEGER PRIMARY KEY AUTOINCREMENT,
     base_currency_id   INTEGER NOT NULL,
     target_currency_id INTEGER NOT NULL,
-    rate             DECIMAL(6),
+    rate               DECIMAL(6),
     CONSTRAINT fk_base_currency_id FOREIGN KEY (base_currency_id) REFERENCES currency (id) ON DELETE CASCADE,
     CONSTRAINT fk_target_currency_id FOREIGN KEY (target_currency_id) REFERENCES currency (id) ON DELETE CASCADE,
     CONSTRAINT fk_base_target_id UNIQUE (base_currency_id, target_currency_id)
