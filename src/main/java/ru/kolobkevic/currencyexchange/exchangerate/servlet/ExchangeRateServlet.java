@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import ru.kolobkevic.currencyexchange.common.AbstractServlet;
 import ru.kolobkevic.currencyexchange.common.db.DatabaseService;
 import ru.kolobkevic.currencyexchange.common.db.DatabaseServiceImpl;
+import ru.kolobkevic.currencyexchange.common.exceptions.BadArgumentException;
 import ru.kolobkevic.currencyexchange.common.exceptions.DatabaseException;
 import ru.kolobkevic.currencyexchange.common.exceptions.ObjectNotFoundException;
 import ru.kolobkevic.currencyexchange.common.utils.PathUtils;
@@ -36,17 +37,19 @@ public class ExchangeRateServlet extends AbstractServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        List<String> currencies = PathUtils.getListOfCurrenciesFromRequest(req);
-        String baseCurrency = currencies.get(0);
-        String targetCurrency = currencies.get(1);
         try {
+            List<String> currencies = PathUtils.getListOfCurrenciesFromRequest(req);
+            String baseCurrency = currencies.get(0);
+            String targetCurrency = currencies.get(1);
+
+            PathUtils.validateStringParams(baseCurrency, targetCurrency);
             ExchangeRateResponseDto exchangeRateResponseDto =
                     exchangeRateService.findByExchangeCodes(baseCurrency, targetCurrency);
             sendJsonResponse(resp, HttpServletResponse.SC_OK, exchangeRateResponseDto);
         } catch (ObjectNotFoundException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, CURRENCY_NOT_FOUND_MESSAGE);
-        } catch (IllegalArgumentException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ILLEGAL_ARGUMENT_MESSAGE);
+        } catch (BadArgumentException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, BAD_ARGUMENT_MESSAGE);
         } catch (DatabaseException e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (Exception e) {
@@ -56,12 +59,14 @@ public class ExchangeRateServlet extends AbstractServlet {
 
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String param = req.getParameter("id");
         try {
+            String param = req.getParameter("id");
+
+            PathUtils.validateStringParams(param);
             exchangeRateService.deleteById(Integer.parseInt(param));
             resp.setStatus(HttpServletResponse.SC_OK);
-        } catch (IllegalArgumentException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ILLEGAL_ARGUMENT_MESSAGE);
+        } catch (NumberFormatException | BadArgumentException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, BAD_ARGUMENT_MESSAGE);
         } catch (DatabaseException e) {
             resp.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (Exception e) {
@@ -70,13 +75,17 @@ public class ExchangeRateServlet extends AbstractServlet {
     }
 
     protected void doPatch(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        List<String> codes = PathUtils.getListOfCurrenciesFromRequest(req);
-        String baseCode = codes.get(0);
-        String targetCode = codes.get(1);
-        log.info("Updating exchange rate from {} to {}", baseCode, targetCode);
-        log.info(req.getParameter("rate"));
-        BigDecimal rate = BigDecimal.valueOf(Double.parseDouble(req.getParameter("rate")));
         try {
+            List<String> codes = PathUtils.getListOfCurrenciesFromRequest(req);
+            String baseCode = codes.get(0);
+            String targetCode = codes.get(1);
+            String rateParam = req.getParameter("rate");
+
+            PathUtils.validateStringParams(baseCode, targetCode, rateParam);
+            BigDecimal rate = BigDecimal.valueOf(Double.parseDouble(rateParam));
+
+            log.info("Updating exchange rate from {} to {}. Rate = {}", baseCode, targetCode, rate);
+
             ExchangeRateResponseDto existedExchangeRate =
                     exchangeRateService.findByExchangeCodes(baseCode, targetCode);
             ExchangeRateRequestDto requestDto = new ExchangeRateRequestDto(
@@ -84,8 +93,8 @@ public class ExchangeRateServlet extends AbstractServlet {
                     existedExchangeRate.getTargetCurrency().getCode(),
                     rate);
             sendJsonResponse(resp, HttpServletResponse.SC_OK, exchangeRateService.update(requestDto));
-        } catch (IllegalArgumentException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ILLEGAL_ARGUMENT_MESSAGE);
+        } catch (BadArgumentException | NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, BAD_ARGUMENT_MESSAGE);
         } catch (ObjectNotFoundException e) {
             resp.sendError(HttpServletResponse.SC_NOT_FOUND, CURRENCY_NOT_FOUND_MESSAGE);
         } catch (DatabaseException e) {

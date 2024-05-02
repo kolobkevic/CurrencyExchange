@@ -35,8 +35,8 @@ public class ExchangeRateServiceImpl implements ExchangeRateService {
 
     @Override
     public ExchangeRateResponseDto save(ExchangeRateRequestDto exchangeRateRequestDto) {
-            ExchangeRate exchangeRate = exchangeRateRepository.save(ExchangeRateMapper.toModel(exchangeRateRequestDto));
-            return ExchangeRateMapper.toDto(exchangeRate);
+        ExchangeRate exchangeRate = exchangeRateRepository.save(ExchangeRateMapper.toModel(exchangeRateRequestDto));
+        return ExchangeRateMapper.toDto(exchangeRate);
     }
 
     @Override
