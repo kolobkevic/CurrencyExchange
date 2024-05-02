@@ -7,9 +7,11 @@ import jakarta.servlet.http.HttpServletResponse;
 import ru.kolobkevic.currencyexchange.common.AbstractServlet;
 import ru.kolobkevic.currencyexchange.common.db.DatabaseService;
 import ru.kolobkevic.currencyexchange.common.db.DatabaseServiceImpl;
+import ru.kolobkevic.currencyexchange.common.exceptions.BadArgumentException;
 import ru.kolobkevic.currencyexchange.common.exceptions.DatabaseException;
 import ru.kolobkevic.currencyexchange.common.exceptions.ObjectAlreadyExistsException;
 import ru.kolobkevic.currencyexchange.common.exceptions.ObjectNotFoundException;
+import ru.kolobkevic.currencyexchange.common.utils.PathUtils;
 import ru.kolobkevic.currencyexchange.exchangerate.ExchangeRateService;
 import ru.kolobkevic.currencyexchange.exchangerate.ExchangeRateServiceImpl;
 import ru.kolobkevic.currencyexchange.exchangerate.dto.ExchangeRateRequestDto;
@@ -42,15 +44,18 @@ public class ExchangeRatesServlet extends AbstractServlet {
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        String baseCurrencyCode = req.getParameter("baseCurrencyCode");
-        String targetCurrencyCode = req.getParameter("targetCurrencyCode");
-        BigDecimal rate = BigDecimal.valueOf(Float.parseFloat(req.getParameter("rate")));
         try {
+            String baseCurrencyCode = req.getParameter("baseCurrencyCode");
+            String targetCurrencyCode = req.getParameter("targetCurrencyCode");
+            String rateParam = req.getParameter("rate");
+
+            PathUtils.validateStringParams(baseCurrencyCode, targetCurrencyCode, rateParam);
+            BigDecimal rate = BigDecimal.valueOf(Float.parseFloat(rateParam));
             ExchangeRateRequestDto exchangeRateRequestDto =
                     new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
             sendJsonResponse(resp, HttpServletResponse.SC_CREATED, exchangeRateService.save(exchangeRateRequestDto));
-        } catch (IllegalArgumentException e) {
-            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, ILLEGAL_ARGUMENT_MESSAGE);
+        } catch (BadArgumentException | NumberFormatException e) {
+            resp.sendError(HttpServletResponse.SC_BAD_REQUEST, BAD_ARGUMENT_MESSAGE);
         } catch (ObjectAlreadyExistsException e) {
             resp.sendError(HttpServletResponse.SC_CONFLICT, CURRENCY_EXISTS_MESSAGE);
         } catch (ObjectNotFoundException e) {

@@ -7,7 +7,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import ru.kolobkevic.currencyexchange.common.AbstractServlet;
 import ru.kolobkevic.currencyexchange.common.db.DatabaseService;
 import ru.kolobkevic.currencyexchange.common.db.DatabaseServiceImpl;
+import ru.kolobkevic.currencyexchange.common.exceptions.BadArgumentException;
 import ru.kolobkevic.currencyexchange.common.exceptions.ObjectNotFoundException;
+import ru.kolobkevic.currencyexchange.common.utils.PathUtils;
 import ru.kolobkevic.currencyexchange.currencyexchange.CurrencyExchangeService;
 import ru.kolobkevic.currencyexchange.currencyexchange.CurrencyExchangeServiceImpl;
 import ru.kolobkevic.currencyexchange.currencyexchange.dto.ExceptionDto;
@@ -29,13 +31,20 @@ public class CurrencyExchangeServlet extends AbstractServlet {
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        ExchangeRequestDto requestDto = new ExchangeRequestDto();
-        requestDto.setBaseCurrency(req.getParameter("from"));
-        requestDto.setTargetCurrency(req.getParameter("to"));
-        requestDto.setAmount(BigDecimal.valueOf(Double.parseDouble(req.getParameter("amount"))));
         try {
+            String baseCurrencyParam = req.getParameter("from");
+            String targetCurrencyParam = req.getParameter("to");
+            String amountParam = req.getParameter("amount");
+
+            PathUtils.validateStringParams(baseCurrencyParam, targetCurrencyParam, amountParam);
+            ExchangeRequestDto requestDto = new ExchangeRequestDto(
+                    baseCurrencyParam,
+                    targetCurrencyParam,
+                    BigDecimal.valueOf(Double.parseDouble(amountParam)));
             ExchangeResponseDto responseDto = exchangeService.getExchange(requestDto);
             sendJsonResponse(resp, HttpServletResponse.SC_OK, responseDto);
+        } catch (BadArgumentException | NumberFormatException e) {
+            sendJsonResponse(resp, HttpServletResponse.SC_BAD_REQUEST, new ExceptionDto(e.getMessage()));
         } catch (ObjectNotFoundException e) {
             sendJsonResponse(resp, HttpServletResponse.SC_NOT_FOUND, new ExceptionDto(e.getMessage()));
         } catch (Exception e) {

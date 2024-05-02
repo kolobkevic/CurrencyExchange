@@ -7,12 +7,8 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class JsonUtils {
-    public static <T> String toJson(T obj) {
+    public static <T> String toJson(T obj) throws JsonProcessingException {
         ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(obj);
-        } catch (JsonProcessingException e) {
-            throw new IllegalArgumentException("Invalid JSON " + obj + ": " + e);
-        }
+        return mapper.writeValueAsString(obj);
     }
 }

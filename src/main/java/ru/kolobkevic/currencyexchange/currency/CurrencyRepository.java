@@ -1,10 +1,10 @@
 package ru.kolobkevic.currencyexchange.currency;
 
 import org.sqlite.SQLiteErrorCode;
+import ru.kolobkevic.currencyexchange.common.ResultSetMapper;
 import ru.kolobkevic.currencyexchange.common.exceptions.DatabaseException;
 import ru.kolobkevic.currencyexchange.common.exceptions.ObjectAlreadyExistsException;
 import ru.kolobkevic.currencyexchange.common.repositories.CrudRepository;
-import ru.kolobkevic.currencyexchange.common.ResultSetMapper;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

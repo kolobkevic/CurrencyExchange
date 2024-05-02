@@ -28,14 +28,14 @@ public class ExchangeRateRequestDto {
     private BigDecimal rate;
 
     @JMapConversion(from = {"baseCurrencyCode"}, to = {"baseCurrency"})
-    public Currency getBaseCurrency(String baseCurrencyCode){
+    public Currency getBaseCurrency(String baseCurrencyCode) {
         DatabaseService databaseService = new DatabaseServiceImpl();
         CurrencyService service = new CurrencyServiceImpl(databaseService.getConnection());
         return CurrencyMapper.fromResponseToModel(service.findByCode(baseCurrencyCode));
     }
 
     @JMapConversion(from = {"targetCurrencyCode"}, to = {"targetCurrency"})
-    public Currency getTargetCurrency(String targetCurrencyCode){
+    public Currency getTargetCurrency(String targetCurrencyCode) {
         DatabaseService databaseService = new DatabaseServiceImpl();
         CurrencyService service = new CurrencyServiceImpl(databaseService.getConnection());
         return CurrencyMapper.fromResponseToModel(service.findByCode(targetCurrencyCode));
