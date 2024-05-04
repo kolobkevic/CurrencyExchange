@@ -5,13 +5,10 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import ru.kolobkevic.currencyexchange.common.AbstractServlet;
-import ru.kolobkevic.currencyexchange.common.db.DatabaseService;
-import ru.kolobkevic.currencyexchange.common.db.DatabaseServiceImpl;
 import ru.kolobkevic.currencyexchange.common.exceptions.BadArgumentException;
 import ru.kolobkevic.currencyexchange.common.exceptions.ObjectNotFoundException;
 import ru.kolobkevic.currencyexchange.common.utils.PathUtils;
 import ru.kolobkevic.currencyexchange.currencyexchange.CurrencyExchangeService;
-import ru.kolobkevic.currencyexchange.currencyexchange.CurrencyExchangeServiceImpl;
 import ru.kolobkevic.currencyexchange.currencyexchange.dto.ExceptionDto;
 import ru.kolobkevic.currencyexchange.currencyexchange.dto.ExchangeRequestDto;
 import ru.kolobkevic.currencyexchange.currencyexchange.dto.ExchangeResponseDto;
@@ -25,8 +22,7 @@ public class CurrencyExchangeServlet extends AbstractServlet {
 
     @Override
     public void init(ServletConfig config) {
-        DatabaseService databaseService = new DatabaseServiceImpl();
-        exchangeService = new CurrencyExchangeServiceImpl(databaseService.getConnection());
+        exchangeService = (CurrencyExchangeService) config.getServletContext().getAttribute("exchangeService");
     }
 
     @Override
