@@ -15,6 +15,8 @@ import ru.kolobkevic.currencyexchange.exchangerate.dto.ExchangeRateRequestDto;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 
 import static ru.kolobkevic.currencyexchange.common.Constants.*;
 
@@ -47,7 +49,7 @@ public class ExchangeRatesServlet extends AbstractServlet {
             String rateParam = req.getParameter("rate");
 
             PathUtils.validateStringParams(baseCurrencyCode, targetCurrencyCode, rateParam);
-            BigDecimal rate = BigDecimal.valueOf(Float.parseFloat(rateParam));
+            BigDecimal rate = new BigDecimal(rateParam, new MathContext(5, RoundingMode.HALF_UP));
             ExchangeRateRequestDto exchangeRateRequestDto =
                     new ExchangeRateRequestDto(baseCurrencyCode, targetCurrencyCode, rate);
             sendJsonResponse(resp, HttpServletResponse.SC_CREATED, exchangeRateService.save(exchangeRateRequestDto));

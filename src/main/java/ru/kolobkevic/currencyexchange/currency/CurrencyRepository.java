@@ -18,7 +18,8 @@ public class CurrencyRepository implements CrudRepository<Currency> {
     private static final String FIND_BY_ID_SQL = "SELECT id, code, full_name, sign FROM currency WHERE id = ?";
     private static final String FIND_ALL_SQL = "SELECT id, code, full_name, sign FROM currency";
     private static final String FIND_BY_CODE_SQL = "SELECT id, code, full_name, sign FROM currency WHERE Code = ?";
-    private static final String SAVE_SQL = "INSERT INTO currency(code, full_name, sign) VALUES(?, ?, ?)";
+    private static final String SAVE_SQL = "INSERT INTO currency(code, full_name, sign) VALUES(?, ?, ?) " +
+            "RETURNING currency.id";
     private static final String DELETE_SQL = "DELETE FROM currency WHERE id = ?";
 
     private final Connection connection;
@@ -64,14 +65,14 @@ public class CurrencyRepository implements CrudRepository<Currency> {
             preparedStatement.setString(2, currency.getFullName());
             preparedStatement.setString(3, currency.getSign());
             preparedStatement.execute();
+            currency.setId(preparedStatement.getGeneratedKeys().getInt(1));
         } catch (SQLException e) {
             if (e.getErrorCode() == SQLiteErrorCode.SQLITE_CONSTRAINT.code) {
                 throw new ObjectAlreadyExistsException(e.getMessage());
             }
             throw new DatabaseException("Unable to save currency", e);
         }
-        return findByCode(currency.getCode())
-                .orElseThrow(() -> new DatabaseException("Unable to get currency after saving it"));
+        return currency;
     }
 
 

@@ -36,7 +36,7 @@ public class CurrencyExchangeServlet extends AbstractServlet {
             ExchangeRequestDto requestDto = new ExchangeRequestDto(
                     baseCurrencyParam,
                     targetCurrencyParam,
-                    BigDecimal.valueOf(Double.parseDouble(amountParam)));
+                    new BigDecimal(amountParam));
             ExchangeResponseDto responseDto = exchangeService.getExchange(requestDto);
             sendJsonResponse(resp, HttpServletResponse.SC_OK, responseDto);
         } catch (BadArgumentException | NumberFormatException e) {
