@@ -68,10 +68,12 @@ public class ExchangeRateRepository implements CrudRepository<ExchangeRate> {
 
     private static final String SAVE_SQL = """
             INSERT INTO exchange_rate(base_currency_id, target_currency_id, rate) VALUES(?, ?, ?)
+            RETURNING exchange_rate.id;
             """;
 
     private static final String UPDATE_SQL = """
             UPDATE exchange_rate SET rate =? WHERE base_currency_id = ? AND target_currency_id = ?
+            RETURNING exchange_rate.id;
             """;
 
     private static final String DELETE_SQL = """
@@ -117,10 +119,8 @@ public class ExchangeRateRepository implements CrudRepository<ExchangeRate> {
             preparedStatement.setInt(2, exchangeRate.getTargetCurrency().getId());
             preparedStatement.setBigDecimal(3, exchangeRate.getRate());
             preparedStatement.execute();
-            return findByExchangeCodes(
-                    exchangeRate.getBaseCurrency().getCode(),
-                    exchangeRate.getTargetCurrency().getCode())
-                    .orElseThrow(() -> new ObjectNotFoundException("Unable to get exchange rate after saving it"));
+            exchangeRate.setId(preparedStatement.getResultSet().getInt(1));
+            return exchangeRate;
         } catch (SQLException e) {
             if (e.getErrorCode() == SQLiteErrorCode.SQLITE_CONSTRAINT_UNIQUE.code) {
                 throw new ObjectAlreadyExistsException(e.getMessage());
@@ -162,6 +162,7 @@ public class ExchangeRateRepository implements CrudRepository<ExchangeRate> {
             preparedStatement.setInt(2, exchangeRate.getBaseCurrency().getId());
             preparedStatement.setInt(3, exchangeRate.getTargetCurrency().getId());
             preparedStatement.execute();
+            exchangeRate.setId(preparedStatement.getResultSet().getInt(1));
             return findByExchangeCodes(
                     exchangeRate.getBaseCurrency().getCode(),
                     exchangeRate.getTargetCurrency().getCode())

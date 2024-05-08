@@ -7,19 +7,18 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import ru.kolobkevic.currencyexchange.common.AbstractServlet;
-import ru.kolobkevic.currencyexchange.common.db.DatabaseService;
-import ru.kolobkevic.currencyexchange.common.db.DatabaseServiceImpl;
 import ru.kolobkevic.currencyexchange.common.exceptions.BadArgumentException;
 import ru.kolobkevic.currencyexchange.common.exceptions.DatabaseException;
 import ru.kolobkevic.currencyexchange.common.exceptions.ObjectNotFoundException;
 import ru.kolobkevic.currencyexchange.common.utils.PathUtils;
 import ru.kolobkevic.currencyexchange.exchangerate.ExchangeRateService;
-import ru.kolobkevic.currencyexchange.exchangerate.ExchangeRateServiceImpl;
 import ru.kolobkevic.currencyexchange.exchangerate.dto.ExchangeRateRequestDto;
 import ru.kolobkevic.currencyexchange.exchangerate.dto.ExchangeRateResponseDto;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.util.List;
 
 import static ru.kolobkevic.currencyexchange.common.Constants.*;
@@ -31,8 +30,8 @@ public class ExchangeRateServlet extends AbstractServlet {
 
     @Override
     public void init(ServletConfig config) {
-        DatabaseService databaseService = new DatabaseServiceImpl();
-        exchangeRateService = new ExchangeRateServiceImpl(databaseService.getConnection());
+        exchangeRateService =
+                (ExchangeRateService) config.getServletContext().getAttribute("exchangeRateService");
     }
 
     @Override
@@ -82,7 +81,7 @@ public class ExchangeRateServlet extends AbstractServlet {
             String rateParam = req.getParameter("rate");
 
             PathUtils.validateStringParams(baseCode, targetCode, rateParam);
-            BigDecimal rate = BigDecimal.valueOf(Double.parseDouble(rateParam));
+            BigDecimal rate = new BigDecimal(rateParam, new MathContext(5, RoundingMode.HALF_UP));
 
             log.info("Updating exchange rate from {} to {}. Rate = {}", baseCode, targetCode, rate);
 

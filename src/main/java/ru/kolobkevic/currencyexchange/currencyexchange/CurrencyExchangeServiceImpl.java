@@ -30,7 +30,7 @@ public class CurrencyExchangeServiceImpl implements CurrencyExchangeService {
                 try {
                     return getCrossExchange(requestDto);
                 } catch (ObjectNotFoundException e2) {
-                    throw new ObjectNotFoundException("Currency not found", e2);
+                    throw new ObjectNotFoundException("Unable to found exchange", e2);
                 }
             }
         }
@@ -101,11 +101,11 @@ public class CurrencyExchangeServiceImpl implements CurrencyExchangeService {
     }
 
     private BigDecimal getReverseRate(BigDecimal rate) {
-        return new BigDecimal(1).divide(rate, 2, RoundingMode.HALF_UP);
+        return new BigDecimal(1).divide(rate, 4, RoundingMode.HALF_UP);
     }
 
     private BigDecimal getCrossRate(BigDecimal fromRate, BigDecimal toRate) {
-        return toRate.divide(fromRate, 2, RoundingMode.HALF_UP);
+        return toRate.divide(fromRate, 4, RoundingMode.HALF_UP);
     }
 
     private BigDecimal convertAmount(BigDecimal amount, BigDecimal rate) {
