@@ -1,0 +1,843 @@
+{
+	"info": {
+		"_postman_id": "e43b7c28-c60d-4483-b635-11e39d0d1aee",
+		"name": "Обмен валют API документация",
+		"description": "REST API для описания валют и обменных курсов. Позволяет просматривать и редактировать списки валют и обменных курсов, и совершать расчёт конвертации произвольных сумм из одной валюты в другую.\n\n### Валюты\n\n#### GET `/currencies`\n\nПолучение списка валют. Пример ответа:\n\n```\n[\n    {\n        \"id\": 1,\n        \"code\": \"AZN\",\n        \"fullName\": \"Азербайджанский манат\",\n        \"sign\": \"₼\"\n    },\n    {\n        \"id\": 2,\n        \"code\": \"BYN\",\n        \"fullName\": \"Белорусский рубль\",\n        \"sign\": \"Р\"\n    }\n]\n\n ```\n\nHTTP коды ответов:\n\n- Успех - 200\n- Ошибка (например, база данных недоступна) - 500\n    \n\n#### GET `/currency/EUR`\n\nПолучение конкретной валюты. Пример ответа:\n\n```\n{\n    \"id\": 7,\n    \"code\": \"EUR\",\n    \"fullName\": \"Евро\",\n    \"sign\": \"€\"\n}\n\n ```\n\nHTTP коды ответов:\n\n- Успех - 200\n- Код валюты отсутствует в адресе - 400\n- Валюта не найдена - 404\n- Ошибка (например, база данных недоступна) - 500\n    \n\n#### POST `/currencies`\n\nДобавление новой валюты в базу. Данные передаются в теле запроса в виде полей формы (`x-www-form-urlencoded`). Поля формы - `name`, `code`, `sign`. Пример ответа - JSON представление вставленной в базу записи, включая её ID:\n\n```\n{\n    \"id\": 11,\n    \"code\": \"KOL\",\n    \"fullName\": \"My valuta\",\n    \"sign\": \"-+-\"\n}\n\n ```\n\nHTTP коды ответов:\n\n- Успех - 201\n- Отсутствует нужное поле формы - 400\n- Валюта с таким кодом уже существует - 409\n- Ошибка (например, база данных недоступна) - 500\n    \n\n### Обменные курсы\n\n#### GET `/exchangeRates`\n\nПолучение списка всех обменных курсов. Пример ответа:\n\n```\n[\n    {\n        \"id\": 1,\n        \"baseCurrency\": {\n            \"id\": 1,\n            \"code\": \"AZN\",\n            \"fullName\": \"Азербайджанский манат\",\n            \"sign\": \"₼\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 54.8775\n    }\n]\n\n ```\n\nHTTP коды ответов:\n\n- Успех - 200\n- Ошибка (например, база данных недоступна) - 500\n    \n\n#### GET `/exchangeRate/USDRUB`\n\nПолучение конкретного обменного курса. Валютная пара задаётся идущими подряд кодами валют в адресе запроса. Пример ответа:\n\n```\n{\n    \"id\": 5,\n    \"baseCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"targetCurrency\": {\n        \"id\": 3,\n        \"code\": \"RUB\",\n        \"fullName\": \"Российский рубль\",\n        \"sign\": \"Р\"\n    },\n    \"rate\": 91.7791\n}\n\n ```\n\nHTTP коды ответов:\n\n- Успех - 200\n- Коды валют пары отсутствуют в адресе - 400\n- Обменный курс для пары не найден - 404\n- Ошибка (например, база данных недоступна) - 500\n    \n\n#### POST `/exchangeRates`\n\nДобавление нового обменного курса в базу. Данные передаются в теле запроса в виде полей формы (`x-www-form-urlencoded`). Поля формы - `baseCurrencyCode`, `targetCurrencyCode`, `rate`. Пример полей формы:\n\n- `baseCurrencyCode` - USD\n- `targetCurrencyCode` - GEL\n- `rate` - 2.68\n    \n\nПример ответа - JSON представление вставленной в базу записи, включая её ID:\n\n```\n{\n    \"id\": 13,\n    \"baseCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"targetCurrency\": {\n        \"id\": 4,\n        \"code\": \"GEL\",\n        \"fullName\": \"Грузинский лари\",\n        \"sign\": \"₾\"\n    },\n    \"rate\": 2.68\n}\n\n ```\n\nHTTP коды ответов:\n\n- Успех - 201\n- Отсутствует нужное поле формы - 400\n- Валютная пара с таким кодом уже существует - 409\n- Одна (или обе) валюта из валютной пары не существует в БД - 404\n- Ошибка (например, база данных недоступна) - 500\n    \n\n#### PATCH `/exchangeRate/USDRUB`\n\nОбновление существующего в базе обменного курса. Валютная пара задаётся идущими подряд кодами валют в адресе запроса. Данные передаются в теле запроса в виде полей формы (`x-www-form-urlencoded`). Единственное поле формы - `rate`.\n\nПример ответа - JSON представление обновлённой записи в базе данных, включая её ID:\n\n```\n{\n{\n    \"id\": 5,\n    \"baseCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"targetCurrency\": {\n        \"id\": 3,\n        \"code\": \"RUB\",\n        \"fullName\": \"Российский рубль\",\n        \"sign\": \"Р\"\n    },\n    \"rate\": 91.7791\n}\n\n ```\n\nHTTP коды ответов:\n\n- Успех - 200\n- Отсутствует нужное поле формы - 400\n- Валютная пара отсутствует в базе данных - 404\n- Ошибка (например, база данных недоступна) - 500\n    \n\n### Обмен валюты\n\n#### GET `/exchange?from=BASE_CURRENCY_CODE&to=TARGET_CURRENCY_CODE&amount=$AMOUNT`\n\nРасчёт перевода определённого количества средств из одной валюты в другую. Пример запроса - GET `/exchange?from=USD&to=RUB&amount=10`.\n\nПример ответа:\n\n```\n{\n    \"baseCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"targetCurrency\": {\n        \"id\": 3,\n        \"code\": \"RUB\",\n        \"fullName\": \"Российский рубль\",\n        \"sign\": \"Р\"\n    },\n    \"rate\": 91.7791,\n    \"amount\": 10.0,\n    \"convertedAmount\": 917.79\n}\n\n ```\n\nПолучение курса для обмена может пройти по одному из трёх сценариев. Допустим, совершаем перевод из валюты **A** в валюту **B**:\n\n1. В таблице `ExchangeRates` существует валютная пара **AB** - берём её курс\n2. В таблице `ExchangeRates` существует валютная пара **BA** - берем её курс, и считаем обратный, чтобы получить **AB**\n3. В таблице `ExchangeRates` существуют валютные пары **USD-A** и **USD-B** - вычисляем из этих курсов курс **AB**",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "28840967"
+	},
+	"item": [
+		{
+			"name": "currencies",
+			"item": [
+				{
+					"name": "Get all currencies",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://147.45.106.251:8088/CurrencyExchange/currencies",
+						"description": "Gets information about the authenticated user."
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": "http://147.45.106.251:8088/CurrencyExchange/currencies"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": {
+										"content": "",
+										"type": "text/plain"
+									}
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": 1,\n        \"code\": \"AZN\",\n        \"fullName\": \"Азербайджанский манат\",\n        \"sign\": \"₼\"\n    },\n    {\n        \"id\": 2,\n        \"code\": \"BYN\",\n        \"fullName\": \"Белорусский рубль\",\n        \"sign\": \"Р\"\n    },\n    {\n        \"id\": 3,\n        \"code\": \"RUB\",\n        \"fullName\": \"Российский рубль\",\n        \"sign\": \"Р\"\n    },\n    {\n        \"id\": 4,\n        \"code\": \"GEL\",\n        \"fullName\": \"Грузинский лари\",\n        \"sign\": \"₾\"\n    },\n    {\n        \"id\": 5,\n        \"code\": \"AED\",\n        \"fullName\": \"Дирхам ОАЭ\",\n        \"sign\": \"₼\"\n    },\n    {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    {\n        \"id\": 7,\n        \"code\": \"EUR\",\n        \"fullName\": \"Евро\",\n        \"sign\": \"€\"\n    },\n    {\n        \"id\": 8,\n        \"code\": \"CNY\",\n        \"fullName\": \"Китайский юань\",\n        \"sign\": \"¥\"\n    },\n    {\n        \"id\": 9,\n        \"code\": \"TRY\",\n        \"fullName\": \"Турецкая лира\",\n        \"sign\": \"₺\"\n    },\n    {\n        \"id\": 10,\n        \"code\": \"GBP\",\n        \"fullName\": \"Фунт стерлингов Соединенного королевства\",\n        \"sign\": \"£\"\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Save new currency",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "name",
+									"value": "My valuta",
+									"type": "default"
+								},
+								{
+									"key": "code",
+									"value": "KOL",
+									"type": "default"
+								},
+								{
+									"key": "sign",
+									"value": "-+-",
+									"type": "default"
+								}
+							]
+						},
+						"url": "http://147.45.106.251:8088/CurrencyExchange/currencies"
+					},
+					"response": [
+						{
+							"name": "Successfull Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "name",
+											"value": "My valuta",
+											"type": "default"
+										},
+										{
+											"key": "code",
+											"value": "KOL",
+											"type": "default"
+										},
+										{
+											"key": "sign",
+											"value": "5",
+											"type": "default"
+										}
+									]
+								},
+								"url": "http://147.45.106.251:8088/CurrencyExchange/currencies"
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"id\": 11,\n    \"code\": \"KOL\",\n    \"fullName\": \"My valuta\",\n    \"sign\": \"-+-\"\n}"
+						}
+					]
+				}
+			],
+			"description": "The `/currencies` endpoints let you manage information about the currencies."
+		},
+		{
+			"name": "currency",
+			"item": [
+				{
+					"name": "Get currency by code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://147.45.106.251:8088/CurrencyExchange/currency/EUR",
+						"description": "Gets information about the authenticated user."
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": "http://147.45.106.251:8088/CurrencyExchange/currency/EUR"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": {
+										"content": "",
+										"type": "text/plain"
+									}
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": 7,\n    \"code\": \"EUR\",\n    \"fullName\": \"Евро\",\n    \"sign\": \"€\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete the currency by ID",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://147.45.106.251:8088/CurrencyExchange/currency?id=11",
+							"protocol": "http",
+							"host": [
+								"147",
+								"45",
+								"106",
+								"251"
+							],
+							"port": "8088",
+							"path": [
+								"CurrencyExchange",
+								"currency"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "11"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://147.45.106.251:8088/CurrencyExchange/currency?id=11",
+									"protocol": "http",
+									"host": [
+										"147",
+										"45",
+										"106",
+										"251"
+									],
+									"port": "8088",
+									"path": [
+										"CurrencyExchange",
+										"currency"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "11"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			],
+			"description": "The `/currency` endpoints let you manage information about the currency."
+		},
+		{
+			"name": "exchangeRates",
+			"item": [
+				{
+					"name": "Get all exchange rates",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://147.45.106.251:8088/CurrencyExchange/exchangeRates",
+						"description": "Gets information about the authenticated user."
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": "http://147.45.106.251:8088/CurrencyExchange/exchangeRates"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": {
+										"content": "",
+										"type": "text/plain"
+									}
+								}
+							],
+							"cookie": [],
+							"body": "[\n    {\n        \"id\": 1,\n        \"baseCurrency\": {\n            \"id\": 1,\n            \"code\": \"AZN\",\n            \"fullName\": \"Азербайджанский манат\",\n            \"sign\": \"₼\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 54.8775\n    },\n    {\n        \"id\": 2,\n        \"baseCurrency\": {\n            \"id\": 2,\n            \"code\": \"BYN\",\n            \"fullName\": \"Белорусский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 28.6672\n    },\n    {\n        \"id\": 3,\n        \"baseCurrency\": {\n            \"id\": 4,\n            \"code\": \"GEL\",\n            \"fullName\": \"Грузинский лари\",\n            \"sign\": \"₾\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 34.9028\n    },\n    {\n        \"id\": 4,\n        \"baseCurrency\": {\n            \"id\": 5,\n            \"code\": \"AED\",\n            \"fullName\": \"Дирхам ОАЭ\",\n            \"sign\": \"₼\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 25.4028\n    },\n    {\n        \"id\": 5,\n        \"baseCurrency\": {\n            \"id\": 6,\n            \"code\": \"USD\",\n            \"fullName\": \"Доллар США\",\n            \"sign\": \"$\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 93.2918\n    },\n    {\n        \"id\": 6,\n        \"baseCurrency\": {\n            \"id\": 7,\n            \"code\": \"EUR\",\n            \"fullName\": \"Евро\",\n            \"sign\": \"€\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 99.5609\n    },\n    {\n        \"id\": 7,\n        \"baseCurrency\": {\n            \"id\": 8,\n            \"code\": \"CNY\",\n            \"fullName\": \"Китайский юань\",\n            \"sign\": \"¥\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 12.8396\n    },\n    {\n        \"id\": 8,\n        \"baseCurrency\": {\n            \"id\": 9,\n            \"code\": \"TRY\",\n            \"fullName\": \"Турецкая лира\",\n            \"sign\": \"₺\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 2.8679\n    },\n    {\n        \"id\": 9,\n        \"baseCurrency\": {\n            \"id\": 10,\n            \"code\": \"GBP\",\n            \"fullName\": \"Фунт стерлингов Соединенного королевства\",\n            \"sign\": \"£\"\n        },\n        \"targetCurrency\": {\n            \"id\": 3,\n            \"code\": \"RUB\",\n            \"fullName\": \"Российский рубль\",\n            \"sign\": \"Р\"\n        },\n        \"rate\": 115.0381\n    },\n    {\n        \"id\": 10,\n        \"baseCurrency\": {\n            \"id\": 7,\n            \"code\": \"EUR\",\n            \"fullName\": \"Евро\",\n            \"sign\": \"€\"\n        },\n        \"targetCurrency\": {\n            \"id\": 6,\n            \"code\": \"USD\",\n            \"fullName\": \"Доллар США\",\n            \"sign\": \"$\"\n        },\n        \"rate\": 0.93442\n    },\n    {\n        \"id\": 11,\n        \"baseCurrency\": {\n            \"id\": 6,\n            \"code\": \"USD\",\n            \"fullName\": \"Доллар США\",\n            \"sign\": \"$\"\n        },\n        \"targetCurrency\": {\n            \"id\": 7,\n            \"code\": \"EUR\",\n            \"fullName\": \"Евро\",\n            \"sign\": \"€\"\n        },\n        \"rate\": 1.07\n    },\n    {\n        \"id\": 12,\n        \"baseCurrency\": {\n            \"id\": 6,\n            \"code\": \"USD\",\n            \"fullName\": \"Доллар США\",\n            \"sign\": \"$\"\n        },\n        \"targetCurrency\": {\n            \"id\": 10,\n            \"code\": \"GBP\",\n            \"fullName\": \"Фунт стерлингов Соединенного королевства\",\n            \"sign\": \"£\"\n        },\n        \"rate\": 0.8\n    }\n]"
+						}
+					]
+				},
+				{
+					"name": "Save new exchange rate",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://147.45.106.251:8088/CurrencyExchange/exchangeRates?baseCurrencyCode=USD&targetCurrencyCode=GEL&rate=2.68",
+							"protocol": "http",
+							"host": [
+								"147",
+								"45",
+								"106",
+								"251"
+							],
+							"port": "8088",
+							"path": [
+								"CurrencyExchange",
+								"exchangeRates"
+							],
+							"query": [
+								{
+									"key": "baseCurrencyCode",
+									"value": "USD"
+								},
+								{
+									"key": "targetCurrencyCode",
+									"value": "GEL"
+								},
+								{
+									"key": "rate",
+									"value": "2.68"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [],
+								"url": {
+									"raw": "http://147.45.106.251:8088/CurrencyExchange/exchangeRates?baseCurrencyCode=USD&targetCurrencyCode=GEL&rate=2.68",
+									"protocol": "http",
+									"host": [
+										"147",
+										"45",
+										"106",
+										"251"
+									],
+									"port": "8088",
+									"path": [
+										"CurrencyExchange",
+										"exchangeRates"
+									],
+									"query": [
+										{
+											"key": "baseCurrencyCode",
+											"value": "USD"
+										},
+										{
+											"key": "targetCurrencyCode",
+											"value": "GEL"
+										},
+										{
+											"key": "rate",
+											"value": "2.68"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"id\": 13,\n    \"baseCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"targetCurrency\": {\n        \"id\": 4,\n        \"code\": \"GEL\",\n        \"fullName\": \"Грузинский лари\",\n        \"sign\": \"₾\"\n    },\n    \"rate\": 2.68\n}"
+						}
+					]
+				}
+			],
+			"description": "The `/exchangeRates` endpoints let you manage information about the exchange rates."
+		},
+		{
+			"name": "exchangeRate",
+			"item": [
+				{
+					"name": "Get exchange rate by code",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://147.45.106.251:8088/CurrencyExchange/exchangeRate/USDRUB",
+						"description": "Gets information about the authenticated user."
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": "http://147.45.106.251:8088/CurrencyExchange/exchangeRate/USDRUB"
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": {
+										"content": "",
+										"type": "text/plain"
+									}
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": 5,\n    \"baseCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"targetCurrency\": {\n        \"id\": 3,\n        \"code\": \"RUB\",\n        \"fullName\": \"Российский рубль\",\n        \"sign\": \"Р\"\n    },\n    \"rate\": 91.7791\n}"
+						}
+					]
+				},
+				{
+					"name": "Change the rate of existing exchange rate",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "http://147.45.106.251:8088/CurrencyExchange/exchangeRate/USDRUB?rate=91.7791",
+							"protocol": "http",
+							"host": [
+								"147",
+								"45",
+								"106",
+								"251"
+							],
+							"port": "8088",
+							"path": [
+								"CurrencyExchange",
+								"exchangeRate",
+								"USDRUB"
+							],
+							"query": [
+								{
+									"key": "rate",
+									"value": "91.7791"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "http://147.45.106.251:8088/CurrencyExchange/exchangeRate/USDRUB?rate=91.7791",
+									"protocol": "http",
+									"host": [
+										"147",
+										"45",
+										"106",
+										"251"
+									],
+									"port": "8088",
+									"path": [
+										"CurrencyExchange",
+										"exchangeRate",
+										"USDRUB"
+									],
+									"query": [
+										{
+											"key": "rate",
+											"value": "91.7791"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": "{\n    \"id\": 5,\n    \"baseCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"targetCurrency\": {\n        \"id\": 3,\n        \"code\": \"RUB\",\n        \"fullName\": \"Российский рубль\",\n        \"sign\": \"Р\"\n    },\n    \"rate\": 91.7791\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete the exchange rate by ID",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://147.45.106.251:8088/CurrencyExchange/exchangeRate?id=13",
+							"protocol": "http",
+							"host": [
+								"147",
+								"45",
+								"106",
+								"251"
+							],
+							"port": "8088",
+							"path": [
+								"CurrencyExchange",
+								"exchangeRate"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "13"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "http://147.45.106.251:8088/CurrencyExchange/exchangeRate?id=13",
+									"protocol": "http",
+									"host": [
+										"147",
+										"45",
+										"106",
+										"251"
+									],
+									"port": "8088",
+									"path": [
+										"CurrencyExchange",
+										"exchangeRate"
+									],
+									"query": [
+										{
+											"key": "id",
+											"value": "13"
+										}
+									]
+								}
+							},
+							"_postman_previewlanguage": null,
+							"header": null,
+							"cookie": [],
+							"body": null
+						}
+					]
+				}
+			],
+			"description": "The `/exchangeRate` endpoints let you manage information about the exchange rate."
+		},
+		{
+			"name": "exchange",
+			"item": [
+				{
+					"name": "Get direct exchange",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://147.45.106.251:8088/CurrencyExchange/exchange?from=USD&to=RUB&amount=10",
+							"protocol": "http",
+							"host": [
+								"147",
+								"45",
+								"106",
+								"251"
+							],
+							"port": "8088",
+							"path": [
+								"CurrencyExchange",
+								"exchange"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "USD"
+								},
+								{
+									"key": "to",
+									"value": "RUB"
+								},
+								{
+									"key": "amount",
+									"value": "10"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://147.45.106.251:8088/CurrencyExchange/exchange?from=USD&to=RUB&amount=10",
+									"protocol": "http",
+									"host": [
+										"147",
+										"45",
+										"106",
+										"251"
+									],
+									"port": "8088",
+									"path": [
+										"CurrencyExchange",
+										"exchange"
+									],
+									"query": [
+										{
+											"key": "from",
+											"value": "USD"
+										},
+										{
+											"key": "to",
+											"value": "RUB"
+										},
+										{
+											"key": "amount",
+											"value": "10"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": {
+										"content": "",
+										"type": "text/plain"
+									}
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"baseCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"targetCurrency\": {\n        \"id\": 3,\n        \"code\": \"RUB\",\n        \"fullName\": \"Российский рубль\",\n        \"sign\": \"Р\"\n    },\n    \"rate\": 91.7791,\n    \"amount\": 10.0,\n    \"convertedAmount\": 917.79\n}"
+						}
+					]
+				},
+				{
+					"name": "Get reverse exchange",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://147.45.106.251:8088/CurrencyExchange/exchange?from=RUB&to=USD&amount=1000",
+							"protocol": "http",
+							"host": [
+								"147",
+								"45",
+								"106",
+								"251"
+							],
+							"port": "8088",
+							"path": [
+								"CurrencyExchange",
+								"exchange"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "RUB"
+								},
+								{
+									"key": "to",
+									"value": "USD"
+								},
+								{
+									"key": "amount",
+									"value": "1000"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://147.45.106.251:8088/CurrencyExchange/exchange?from=RUB&to=USD&amount=1000",
+									"protocol": "http",
+									"host": [
+										"147",
+										"45",
+										"106",
+										"251"
+									],
+									"port": "8088",
+									"path": [
+										"CurrencyExchange",
+										"exchange"
+									],
+									"query": [
+										{
+											"key": "from",
+											"value": "RUB"
+										},
+										{
+											"key": "to",
+											"value": "USD"
+										},
+										{
+											"key": "amount",
+											"value": "1000"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": {
+										"content": "",
+										"type": "text/plain"
+									}
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"baseCurrency\": {\n        \"id\": 3,\n        \"code\": \"RUB\",\n        \"fullName\": \"Российский рубль\",\n        \"sign\": \"Р\"\n    },\n    \"targetCurrency\": {\n        \"id\": 6,\n        \"code\": \"USD\",\n        \"fullName\": \"Доллар США\",\n        \"sign\": \"$\"\n    },\n    \"rate\": 0.01,\n    \"amount\": 1000.0,\n    \"convertedAmount\": 10.00\n}"
+						}
+					]
+				},
+				{
+					"name": "Get cross exchange",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://147.45.106.251:8088/CurrencyExchange/exchange?from=EUR&to=GBP&amount=100",
+							"protocol": "http",
+							"host": [
+								"147",
+								"45",
+								"106",
+								"251"
+							],
+							"port": "8088",
+							"path": [
+								"CurrencyExchange",
+								"exchange"
+							],
+							"query": [
+								{
+									"key": "from",
+									"value": "EUR"
+								},
+								{
+									"key": "to",
+									"value": "GBP"
+								},
+								{
+									"key": "amount",
+									"value": "100"
+								}
+							]
+						}
+					},
+					"response": [
+						{
+							"name": "Successful Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://147.45.106.251:8088/CurrencyExchange/exchange?from=EUR&to=GBP&amount=100",
+									"protocol": "http",
+									"host": [
+										"147",
+										"45",
+										"106",
+										"251"
+									],
+									"port": "8088",
+									"path": [
+										"CurrencyExchange",
+										"exchange"
+									],
+									"query": [
+										{
+											"key": "from",
+											"value": "EUR"
+										},
+										{
+											"key": "to",
+											"value": "GBP"
+										},
+										{
+											"key": "amount",
+											"value": "100"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json",
+									"name": "Content-Type",
+									"description": {
+										"content": "",
+										"type": "text/plain"
+									}
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"baseCurrency\": {\n        \"id\": 7,\n        \"code\": \"EUR\",\n        \"fullName\": \"Евро\",\n        \"sign\": \"€\"\n    },\n    \"targetCurrency\": {\n        \"id\": 10,\n        \"code\": \"GBP\",\n        \"fullName\": \"Фунт стерлингов Соединенного королевства\",\n        \"sign\": \"£\"\n    },\n    \"rate\": 0.75,\n    \"amount\": 100.0,\n    \"convertedAmount\": 75.00\n}"
+						}
+					]
+				}
+			],
+			"description": "The `/exchange` endpoints let you manage information about the exchange."
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
